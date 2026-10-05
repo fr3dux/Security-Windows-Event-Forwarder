@@ -14,7 +14,7 @@ public sealed class DarktraceMessageFormatterTests
         var options = Options.Create(new AgentOptions
         {
             SourceAddress = "192.0.2.10",
-            Tag = "WIN_AD_GROUP_CHANGE"
+            Tag = "Windows_AD_Events"
         });
         var formatter = new DarktraceMessageFormatter(options, new FixedSourceAddressResolver("192.0.2.10"));
         var securityEvent = new SecurityEvent(
@@ -29,7 +29,7 @@ public sealed class DarktraceMessageFormatterTests
 
         var result = await formatter.FormatAsync(securityEvent, CancellationToken.None);
 
-        Assert.Contains("WIN_AD_GROUP_CHANGE src=\"192.0.2.10\" message=", result);
+        Assert.Contains("Windows_AD_Events src=\"192.0.2.10\" message=", result);
         var json = result[(result.IndexOf("message=", StringComparison.Ordinal) + "message=".Length)..];
         using var parsed = JsonDocument.Parse(json);
         Assert.Equal(4732, parsed.RootElement.GetProperty("EventID").GetInt32());

@@ -4,7 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$version = "v0.2.0"
+$version = "v0.3.0"
 $artifact = Join-Path $root "artifacts\releases\$version\win-x64"
 
 dotnet test (Join-Path $root "DarktraceEventForwarder.sln") -c $Configuration

@@ -1,4 +1,5 @@
 using Darktrace.WindowsEventForwarder.Events;
+using Darktrace.WindowsEventForwarder.Correlation;
 using Darktrace.WindowsEventForwarder.Formatting;
 using Darktrace.WindowsEventForwarder.Models;
 using Darktrace.WindowsEventForwarder.Queue;
@@ -7,6 +8,7 @@ namespace Darktrace.WindowsEventForwarder.Services;
 
 public sealed class EventCollectorService(
     IWindowsEventSource source,
+    AccountPrivilegeCorrelationEngine correlationEngine,
     DarktraceMessageFormatter formatter,
     IMessageQueue queue,
     BookmarkStore bookmarkStore,
@@ -16,13 +18,20 @@ public sealed class EventCollectorService(
     {
         await foreach (var securityEvent in source.ReadAllAsync(stoppingToken))
         {
-            var id = $"{securityEvent.EventTime.UtcTicks:D19}-{securityEvent.RecordId ?? 0:D19}-{Guid.NewGuid():N}";
-            var payload = await formatter.FormatAsync(securityEvent, stoppingToken);
-            var queued = new QueuedMessage(id, DateTimeOffset.UtcNow, securityEvent.RecordId, payload);
-
-            await queue.EnqueueAsync(queued, stoppingToken);
+            var telemetryEvents = await correlationEngine.ProcessAsync(securityEvent, stoppingToken);
+            foreach (var telemetryEvent in telemetryEvents)
+            {
+                var id = $"{securityEvent.EventTime.UtcTicks:D19}-{securityEvent.RecordId ?? 0:D19}-{Guid.NewGuid():N}";
+                var payload = await formatter.FormatAsync(telemetryEvent.Event, telemetryEvent.Tag, stoppingToken);
+                var queued = new QueuedMessage(id, DateTimeOffset.UtcNow, securityEvent.RecordId, payload);
+                await queue.EnqueueAsync(queued, stoppingToken);
+                logger.LogInformation(
+                    "Queued Windows event {EventId}/{RecordId} as {TelemetryTag}.",
+                    securityEvent.EventId,
+                    securityEvent.RecordId,
+                    telemetryEvent.Tag);
+            }
             await bookmarkStore.SaveAsync(securityEvent.Channel, securityEvent.BookmarkXml, stoppingToken);
-            logger.LogInformation("Queued Windows event {EventId}/{RecordId}.", securityEvent.EventId, securityEvent.RecordId);
         }
     }
 

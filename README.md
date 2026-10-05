@@ -17,10 +17,13 @@ Portuguese documentation: [Configurando o Darktrace](docs/DARKTRACE-CONFIGURATIO
 
 ## What it monitors
 
-The default configuration forwards security-group membership changes:
+The default configuration forwards account lifecycle, interactive logon, and
+security-group membership events:
 
 | Event ID | Meaning |
 |---:|---|
+| 4624 | Successful logon (types 2 and 10 by default) |
+| 4720 | User account created |
 | 4728 | Member added to a global security group |
 | 4732 | Member added to a local security group |
 | 4756 | Member added to a universal security group |
@@ -47,12 +50,17 @@ WEC procedure.
 Each event is sent as a single RFC 3164 line:
 
 ```text
-<134>Oct 03 12:30:00 DC01.example.local WIN_AD_GROUP_CHANGE src="192.0.2.10" message={"EventID":4732,"TargetUserName":"VPN-Users"}
+<134>Oct 03 12:30:00 DC01.example.local Windows_AD_Events src="192.0.2.10" message={"EventID":4732,"TargetUserName":"VPN-Users"}
 ```
 
 The JSON contains `EventTime`, `Hostname`, `EventID`, `RecordId`, `Provider`,
 and every named field present in the Windows event, including fields such as
 `SubjectUserName`, `MemberName`, `MemberSid`, `TargetUserName`, and `TargetSid`.
+
+The agent can also persistently correlate the same account SID across account
+creation, privileged-group membership, and a later successful logon. It emits a
+high-confidence event into the same `Windows_AD_Events` telemetry while keeping
+the individual events available for multi-component Darktrace models.
 
 For exact Custom Telemetry templates and model filters, see
 [Darktrace configuration](docs/DARKTRACE-CONFIGURATION.md).
@@ -61,7 +69,8 @@ For exact Custom Telemetry templates and model filters, see
 
 - Windows Server 2016 or later
 - Administrator access for installation
-- Advanced Audit Policy for **Audit Security Group Management / Success**
+- Advanced Audit Policy for **Audit Security Group Management / Success**,
+  **Audit User Account Management / Success**, and **Audit Logon / Success**
 - Network connectivity from the agent to the Darktrace appliance, normally TCP
   port `1514`
 - .NET 8 SDK only on the build workstation; published packages are self-contained
@@ -77,7 +86,7 @@ From a PowerShell session with .NET 8 SDK:
 The self-contained Windows x64 package is produced at:
 
 ```text
-artifacts\releases\v0.2.0\win-x64
+artifacts\releases\v0.3.0\win-x64
 ```
 
 ## Install: direct mode
@@ -163,6 +172,8 @@ Please report vulnerabilities according to [SECURITY.md](SECURITY.md).
 - `v0.1.0`: direct Security-log collector, validated in a Windows Server 2016 lab.
 - `v0.2.0`: adds WEC/`ForwardedEvents` support and source-host address resolution;
   treat WEC mode as pre-release until it has been validated in your environment.
+- `v0.3.0`: adds account creation, filtered successful logons, and SID-based
+  account-creation → privilege-escalation → logon correlation.
 
 Local build artifacts are intentionally excluded from Git. Published binaries
 should be attached to versioned GitHub Releases after validation.

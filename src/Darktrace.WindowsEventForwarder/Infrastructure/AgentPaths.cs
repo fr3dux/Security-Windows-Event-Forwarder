@@ -13,6 +13,7 @@ public sealed class AgentPaths
     public string Queue => Path.Combine(Root, "queue");
     public string Log => Path.Combine(Root, "logs", "agent.log");
     public string Configuration => Path.Combine(Root, "agentsettings.json");
+    public string CorrelationState => Path.Combine(Root, "correlation-state.json");
 
     public void EnsureDirectories()
     {

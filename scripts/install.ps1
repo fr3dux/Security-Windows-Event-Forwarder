@@ -5,7 +5,7 @@ param(
     [Parameter(Mandatory = $true)][string]$SourceAddress,
     [ValidateSet("Configured", "ResolveEventComputer")][string]$SourceAddressMode = "Configured",
     [string]$Channel = "Security",
-    [string]$Tag = "WIN_AD_GROUP_CHANGE"
+    [string]$Tag = "Windows_AD_Events"
 )
 
 $ErrorActionPreference = "Stop"
@@ -38,8 +38,15 @@ $settings = @{
         Channel = $Channel
         Tag = $Tag
         ReadExistingEventsOnFirstStart = $false
-        EventIds = @(4728, 4732, 4756, 4729, 4733, 4757)
+        EventIds = @(4624, 4720, 4728, 4732, 4756, 4729, 4733, 4757)
         SourceAddressOverrides = @{}
+    }
+    Correlation = @{
+        Enabled = $true
+        WindowMinutes = 1440
+        AllowedLogonTypes = @(2, 10)
+        PrivilegedGroupSids = @("S-1-5-32-544")
+        PrivilegedDomainGroupRids = @(512, 518, 519)
     }
     Syslog = @{
         Host = $DarktraceHost
@@ -53,7 +60,7 @@ $settings = @{
         RetryMaximumSeconds = 300
     }
 }
-$settings | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $dataDirectory "agentsettings.json") -Encoding UTF8
+$settings | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $dataDirectory "agentsettings.json") -Encoding UTF8
 
 $binary = Join-Path $installDirectory "DarktraceEventForwarder.exe"
 sc.exe create $serviceName binPath= "`"$binary`"" start= auto obj= LocalSystem DisplayName= "Darktrace Event Forwarder" | Out-Null

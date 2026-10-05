@@ -1,5 +1,6 @@
 using System.Net;
 using Darktrace.WindowsEventForwarder.Configuration;
+using Darktrace.WindowsEventForwarder.Correlation;
 using Darktrace.WindowsEventForwarder.Events;
 using Darktrace.WindowsEventForwarder.Formatting;
 using Darktrace.WindowsEventForwarder.Infrastructure;
@@ -40,9 +41,17 @@ builder.Services.AddOptions<SyslogOptions>()
 builder.Services.AddOptions<StorageOptions>()
     .Bind(builder.Configuration.GetSection(StorageOptions.SectionName))
     .ValidateOnStart();
+builder.Services.AddOptions<CorrelationOptions>()
+    .Bind(builder.Configuration.GetSection(CorrelationOptions.SectionName))
+    .Validate(options => options.WindowMinutes > 0, "Correlation:WindowMinutes must be greater than zero.")
+    .Validate(options => options.AllowedLogonTypes.Length > 0,
+        "Correlation:AllowedLogonTypes must not be empty.")
+    .ValidateOnStart();
 
 builder.Services.AddSingleton(paths);
 builder.Services.AddSingleton<BookmarkStore>();
+builder.Services.AddSingleton<CorrelationStateStore>();
+builder.Services.AddSingleton<AccountPrivilegeCorrelationEngine>();
 #pragma warning disable CA1416 // This executable is published and installed only for Windows.
 builder.Services.AddSingleton<IWindowsEventSource, WindowsEventSource>();
 #pragma warning restore CA1416

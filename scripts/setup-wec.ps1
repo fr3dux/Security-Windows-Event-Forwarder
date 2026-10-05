@@ -31,7 +31,7 @@ $xml = @"
 <Subscription xmlns="http://schemas.microsoft.com/2006/03/windows/events/subscription">
   <SubscriptionId>$SubscriptionId</SubscriptionId>
   <SubscriptionType>SourceInitiated</SubscriptionType>
-  <Description>Collects Windows privileged group membership changes for Darktrace.</Description>
+  <Description>Collects account lifecycle, privileged membership, and interactive logon events for Darktrace.</Description>
   <Enabled>true</Enabled>
   <Uri>http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog</Uri>
   <ConfigurationMode>Custom</ConfigurationMode>
@@ -47,7 +47,8 @@ $xml = @"
   <Query><![CDATA[
     <QueryList>
       <Query Id="0" Path="Security">
-        <Select Path="Security">*[System[(EventID=4728 or EventID=4732 or EventID=4756 or EventID=4729 or EventID=4733 or EventID=4757)]]</Select>
+        <Select Path="Security">*[System[(EventID=4720 or EventID=4728 or EventID=4732 or EventID=4756 or EventID=4729 or EventID=4733 or EventID=4757)]]</Select>
+        <Select Path="Security">*[System[(EventID=4624)]] and *[EventData[Data[@Name='LogonType']='2' or Data[@Name='LogonType']='10']]</Select>
       </Query>
     </QueryList>
   ]]></Query>

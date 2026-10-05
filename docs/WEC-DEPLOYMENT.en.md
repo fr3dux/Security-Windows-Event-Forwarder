@@ -52,6 +52,15 @@ Computer Configuration
               Audit Security Group Management: Success
 ```
 
+Also enable:
+
+```text
+Account Management
+  Audit User Account Management: Success
+Logon/Logoff
+  Audit Logon: Success
+```
+
 This policy produces event IDs `4728`, `4732`, and `4756` for additions, and
 `4729`, `4733`, and `4757` for removals.
 
@@ -99,7 +108,7 @@ original event hostname and puts that computer's address in `src`:
   -SourceAddress 192.0.2.20 `
   -SourceAddressMode ResolveEventComputer `
   -Channel ForwardedEvents `
-  -Tag WIN_PRIV_GROUP_CHANGE
+  -Tag Windows_AD_Events
 ```
 
 For multihomed hosts or ambiguous DNS, add explicit overrides to
@@ -118,10 +127,10 @@ Restart the service after changing the configuration.
 Use this Custom Telemetry template:
 
 ```text
-Name: WindowsPrivilegedGroupChanges
+Name: Windows_AD_Events
 Type: Custom Data
-Log Filter: WIN_PRIV_GROUP_CHANGE
-Pattern Match: WIN_PRIV_GROUP_CHANGE src="%{IP:src}" message=%{GREEDYDATA:message}
+Log Filter: Windows_AD_Events
+Pattern Match: Windows_AD_Events src="%{IP:src}" message=%{GREEDYDATA:message}
 ```
 
 Save the template and then generate a new real event so that the metric is

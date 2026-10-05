@@ -1,146 +1,111 @@
 # Darktrace Custom Telemetry and models
 
-This guide describes the Darktrace configuration expected by the agent. Menu
-names can vary slightly between Darktrace versions.
+All events use the single `Windows_AD_Events` tag. Activity types are selected
+from the JSON captured in `message=` instead of being encoded in the tag.
 
-## 1. Confirm syslog delivery
-
-Configure the agent to send to the Darktrace syslog listener, normally TCP
-port `1514`. A direct-mode event contains this payload after the syslog header:
-
-```text
-WIN_AD_GROUP_CHANGE src="192.0.2.10" message={"EventID":4732,"SubjectUserName":"Administrator","MemberName":"CN=alice,CN=Users,DC=example,DC=local","TargetUserName":"VPN-Users"}
-```
-
-WEC mode uses the tag `WIN_PRIV_GROUP_CHANGE` by default.
-
-## 2. Create Custom Telemetry
+## Custom Telemetry
 
 Open **System Config > Modules > Telemetry > Custom Telemetry**, select **Add**,
-and create the template that matches the deployment mode.
-
-### Direct mode
+and configure:
 
 | Field | Value |
 |---|---|
-| Name | `DomainController` |
+| Name | `Windows_AD_Events` |
 | Type | `Custom Data` |
-| Log Filter | `WIN_AD_GROUP_CHANGE` |
-| Pattern Match | `WIN_AD_GROUP_CHANGE src="%{IP:src}" message=%{GREEDYDATA:message}` |
+| Log Filter | `Windows_AD_Events` |
+| Pattern Match | `Windows_AD_Events src="%{IP:src}" message=%{GREEDYDATA:message}` |
 
-### WEC mode
+Save before using **Test**. A successful result displays the IPv4 address in
+`src`, the full JSON object in `message`, and
+`type=Custom::Windows_AD_Events`. Testing validates only the parser: save the
+template and generate a new live event before looking for the component in the
+Model Editor.
 
-| Field | Value |
-|---|---|
-| Name | `WindowsPrivilegedGroupChanges` |
-| Type | `Custom Data` |
-| Log Filter | `WIN_PRIV_GROUP_CHANGE` |
-| Pattern Match | `WIN_PRIV_GROUP_CHANGE src="%{IP:src}" message=%{GREEDYDATA:message}` |
+## Forwarded events
 
-Save the template before using **Test**. A successful test must display:
+| Event ID | Purpose |
+|---:|---|
+| 4624 | successful logon; types 2 and 10 by default |
+| 4720 | user account created |
+| 4728 / 4732 / 4756 | member added to a security group |
+| 4729 / 4733 / 4757 | member removed from a security group |
 
-- `src`: the source computer's IPv4 address;
-- `message`: the complete JSON object;
-- `type`: `Custom::DomainController` or
-  `Custom::WindowsPrivilegedGroupChanges`.
+`Correlation:AllowedLogonTypes` controls which 4624 events are accepted. The
+default `[2, 10]` covers interactive and RDP logons without the high volume of
+type 3 network logons.
 
-> [!CAUTION]
-> The Test button only validates parsing. It does not create a live metric event.
-> After saving the template, generate a **new real Windows event** and wait for
-> ingestion. Only then will the custom metric be available to the Model Editor.
+Use **Custom Windows_AD_Events**, not Security Integration, in every model.
+While testing, use a threshold greater than zero, minimum alert interval `1`,
+Auto Suppress off, Generate Model Alert on, and Message as a display field.
 
-## 3. Create a base model
+## Model: account created
 
-In the Model Editor, create a model and add the custom component generated from
-the telemetry template. Its label is normally similar to:
-
-- `Custom DomainController`; or
-- `Custom WindowsPrivilegedGroupChanges`.
-
-Do not select the generic **Security Integration** component. The event was
-ingested as Custom Data and must use its generated custom component.
-
-Recommended base settings:
-
-| Setting | Value |
-|---|---|
-| Component threshold | `> 0` in `1` minute |
-| Minimum seconds between model alerts | `1` while testing |
-| Active | On |
-| Auto Update | Off |
-| Auto Suppress | Off while testing |
-| Model action | Generate Model Alert |
-| Display fields | Message and source address/device |
-
-After validation, choose a suppression interval appropriate to the operational
-workflow. Events created in the same minute may otherwise be combined or
-suppressed depending on model settings.
-
-## 4. Model: user added to VPN-Users
-
-Add two filters to the custom component and require **A AND B**:
-
-| Filter | Field | Operator | Value |
-|---|---|---|---|
-| A | Message | matches regular expression | `.*"EventID":(4728|4732|4756).*` |
-| B | Message | matches regular expression | `.*"TargetUserName":"VPN-Users".*` |
-
-This alerts on additions only. For removals, clone the model and replace filter
-A with:
+Use one Message regular-expression filter:
 
 ```regex
-.*"EventID":(4729|4733|4757).*
+.*"EventID":4720.*
 ```
 
-## 5. Model: privilege escalation through administrative groups
+## Model: account added to an administrative group
 
-Add two filters and require **A AND B**:
+Require both filters:
 
-| Filter | Field | Operator | Value |
-|---|---|---|---|
-| A | Message | matches regular expression | `.*"EventID":(4728|4732|4756).*` |
-| B | Message | matches regular expression | `.*"TargetSid":"(S-1-5-32-544|S-1-5-21-[0-9-]+-(512|518|519))".*` |
+```regex
+.*"EventID":(4728|4732|4756).*
+.*"TargetSid":"(S-1-5-32-544|S-1-5-21-[0-9-]+-(512|518|519))".*
+```
 
-The SIDs cover:
+These SIDs cover built-in Administrators, Domain Admins, Schema Admins, and
+Enterprise Admins.
 
-- `S-1-5-32-544`: local built-in Administrators;
-- RID `512`: Domain Admins;
-- RID `518`: Schema Admins;
-- RID `519`: Enterprise Admins.
+## Behavioral model: logon, account creation, and privilege escalation
 
-Consider separate higher-sensitivity models for other privileged groups. Common
-RIDs include `520` (Group Policy Creator Owners), `526` (Key Admins), and `527`
-(Enterprise Key Admins). Built-in aliases include `548` through `551`. Custom
-groups such as `DnsAdmins` do not have a universal fixed SID; determine the SID
-in your domain and add it explicitly.
+Create three `Custom Windows_AD_Events` components in a 30-minute window:
 
-## 6. Fields shown in the alert
+1. Successful interactive/RDP logon: EventID `4624` and LogonType `2` or `10`.
+2. Account creation: EventID `4720`.
+3. Administrative-group addition: EventID `4728`, `4732`, or `4756`, plus the
+   privileged `TargetSid` expression above.
 
-Include **Message** as a display field. The JSON identifies:
+Trigger when all components are true. This detects suspicious co-occurrence,
+but a Darktrace version may not enforce strict order or dynamically join the
+same account SID across raw components.
 
-| JSON field | Meaning |
-|---|---|
-| `SubjectUserName` / `SubjectDomainName` | account that performed the change |
-| `MemberName` / `MemberSid` | account or principal added to the group |
-| `TargetUserName` / `TargetDomainName` | group that was changed |
-| `TargetSid` | stable SID of the changed group |
-| `Hostname` | Windows host that recorded the event |
-| `EventID` / `RecordId` | event type and source record identifier |
+## High-confidence model: complete chain and new-account logon
 
-Filtering privileged groups by `TargetSid` is more robust than translated group
-names and works across localized Windows installations.
+The agent links the initial logon to account creation through
+`TargetLogonId`/`SubjectLogonId`, then tracks the new identity through
+`TargetSid`, `MemberSid`, and `TargetUserSid`. When all four stages occur within
+`Correlation:WindowMinutes` (1440 by default), it emits an additional event in
+the same telemetry. Require both Message filters:
 
-## 7. Troubleshooting
+```regex
+.*"CorrelationType":"InitialLogonThenCreatedAccountAddedToPrivilegedGroupThenNewAccountLoggedOn".*
+.*"Risk":"High".*
+```
 
-If the component is missing from the Model Editor:
+This confirms the operator's initial session, identity, and event order rather
+than combining unrelated users. The JSON includes `InitialLogon*` fields,
+account SID/name, creator, privileged group, timestamps, new-account logon
+host/type, source IP, and workstation name.
 
-1. Confirm the Custom Telemetry test parses `src`, `message`, and `type`.
-2. Save the template.
-3. Generate a new live event after saving it.
-4. Confirm the agent log contains `Queued` and `Sent` for that event.
-5. Search for the exact custom template name, not Palo Alto or Security
-   Integration metrics.
+If Windows does not provide a linkable `SubjectLogonId`, the agent can still
+emit the three-stage correlation type
+`CreatedAccountAddedToPrivilegedGroupThenLoggedOn`. Keep it in a separate,
+lower-priority model.
 
-If the model does not alert, temporarily remove all message filters, use `> 0 in
-1 minute`, set the minimum interval to `1`, turn Auto Suppress off, and generate
-a fresh event. Once the base component alerts, restore filters one at a time.
+## Deployment scope
+
+Direct mode sees only events recorded on the local computer. To correlate an
+account created on a Domain Controller with a later logon to another server,
+collect all in-scope servers through WEF/WEC. Raw multi-component models can
+also be device-scoped in Darktrace; the agent's synthetic correlated event does
+not require every step to map to the same Darktrace device.
+
+## Troubleshooting
+
+If the component is missing, save the template, generate a new event, confirm
+`Queued` and `Sent` in the agent log, and search for exactly
+`Custom Windows_AD_Events`. If a model does not alert, temporarily remove its
+Message filters, use `> 0 in 1 minute`, disable Auto Suppress, and restore one
+filter at a time.

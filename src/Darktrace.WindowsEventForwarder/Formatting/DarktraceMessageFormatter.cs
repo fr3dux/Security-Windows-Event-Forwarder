@@ -13,6 +13,12 @@ public sealed class DarktraceMessageFormatter(
     private readonly AgentOptions _options = options.Value;
 
     public async Task<string> FormatAsync(SecurityEvent securityEvent, CancellationToken cancellationToken)
+        => await FormatAsync(securityEvent, _options.Tag, cancellationToken);
+
+    public async Task<string> FormatAsync(
+        SecurityEvent securityEvent,
+        string tag,
+        CancellationToken cancellationToken)
     {
         var body = new Dictionary<string, object?>
         {
@@ -28,7 +34,7 @@ public sealed class DarktraceMessageFormatter(
 
         var json = JsonSerializer.Serialize(body);
         var sourceAddress = await sourceAddressResolver.ResolveAsync(securityEvent, cancellationToken);
-        var message = $"{_options.Tag} src=\"{sourceAddress}\" message={json}";
+        var message = $"{tag} src=\"{sourceAddress}\" message={json}";
         var timestamp = securityEvent.EventTime.LocalDateTime.ToString("MMM dd HH:mm:ss", CultureInfo.InvariantCulture);
         return $"<134>{timestamp} {securityEvent.Hostname} {message}";
     }

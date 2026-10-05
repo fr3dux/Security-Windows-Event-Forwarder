@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here.
 
+## 0.3.0 - 2026-10-05
+
+- Replaced event-specific tags with the unified `Windows_AD_Events` telemetry.
+- Added user-account creation event 4720.
+- Added successful interactive/RDP logon event 4624 (types 2 and 10 by default).
+- Added persistent SID-based correlation for account creation, privileged-group
+  membership, and subsequent logon by the new account.
+- Added Darktrace multi-component and high-confidence model guidance.
+
 ## 0.2.0 - 2026-10-05
 
 - Added Windows Event Collector and `ForwardedEvents` support.

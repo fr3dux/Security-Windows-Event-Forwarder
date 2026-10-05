@@ -55,6 +55,15 @@ Computer Configuration
               Audit Security Group Management: Success
 ```
 
+Ative também:
+
+```text
+Account Management
+  Audit User Account Management: Success
+Logon/Logoff
+  Audit Logon: Success
+```
+
 Essa política gera:
 
 ```text
@@ -103,7 +112,7 @@ Use o IP do WEC como fallback. Em condições normais, o agente resolve o hostna
   -SourceAddress 192.0.2.20 `
   -SourceAddressMode ResolveEventComputer `
   -Channel ForwardedEvents `
-  -Tag WIN_PRIV_GROUP_CHANGE
+  -Tag Windows_AD_Events
 ```
 
 Para servidores com vários IPs ou resolução DNS ambígua, configure `SourceAddressOverrides` em:
@@ -125,10 +134,10 @@ Reinicie o serviço depois de alterar a configuração.
 ## 6. Custom Telemetry no Darktrace
 
 ```text
-Name: WindowsPrivilegedGroupChanges
+Name: Windows_AD_Events
 Type: Custom Data
-Log Filter: WIN_PRIV_GROUP_CHANGE
-Pattern Match: WIN_PRIV_GROUP_CHANGE src="%{IP:src}" message=%{GREEDYDATA:message}
+Log Filter: Windows_AD_Events
+Pattern Match: Windows_AD_Events src="%{IP:src}" message=%{GREEDYDATA:message}
 ```
 
 Faça um evento real depois de salvar o template para que a nova métrica seja criada.
