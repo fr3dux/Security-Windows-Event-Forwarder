@@ -11,7 +11,7 @@ Acesse **System Config > Modules > Telemetry > Custom Telemetry**, clique em
 
 | Campo | Valor |
 |---|---|
-| Name | `Windows_AD_Events` |
+| Name | `DomainController` |
 | Type | `Custom Data` |
 | Log Filter | `Windows_AD_Events` |
 | Pattern Match | `Windows_AD_Events src="%{IP:src}" message=%{GREEDYDATA:message}` |
@@ -22,12 +22,17 @@ Exemplo recebido:
 Windows_AD_Events src="192.0.2.10" message={"EventID":4720,"TargetUserName":"new-admin","TargetSid":"S-1-5-21-1-2-3-1200"}
 ```
 
+O nome do template e a tag syslog são independentes. O nome permanece
+`DomainController` para preservar a métrica usada pelos modelos existentes; a
+tag ampla transmitida pelo agente é `Windows_AD_Events`. O Darktrace também pode
+restringir `_` no nome do template, embora ele seja válido no Log Filter.
+
 Salve antes de usar **Test**. O resultado deve mostrar `src`, o JSON completo em
-`message` e `type=Custom::Windows_AD_Events`.
+`message` e `type=Custom::DomainController`.
 
 > [!CAUTION]
 > O Test valida somente o parser. Depois de salvar, gere um evento real novo e
-> aguarde a ingestão para que `Custom Windows_AD_Events` apareça no Model Editor.
+> aguarde a ingestão para que `Custom DomainController` apareça no Model Editor.
 
 ## 2. Eventos enviados
 
@@ -44,8 +49,9 @@ volume elevado de logons de rede tipo 3.
 
 ## 3. Configuração-base dos modelos
 
-Use o componente **Custom Windows_AD_Events**, nunca o componente genérico
-Security Integration. Durante os testes:
+Use o componente **Custom DomainController**, nunca o componente genérico
+Security Integration nem uma métrica separada `Custom WindowsADEvents`. Durante
+os testes:
 
 | Opção | Valor |
 |---|---|
@@ -82,7 +88,7 @@ Isso cobre Administrators, Domain Admins, Schema Admins e Enterprise Admins.
 
 ## 6. Modelo comportamental: logon, criação e escalação
 
-Crie três componentes `Custom Windows_AD_Events`, todos dentro de 30 minutos:
+Crie três componentes `Custom DomainController`, todos dentro de 30 minutos:
 
 1. **Logon interativo/RDP**
    - A: `.*"EventID":4624.*`
@@ -158,6 +164,6 @@ agente não depende de todos os passos aparecerem no mesmo dispositivo Darktrace
 
 Se o componente não aparecer, salve o template, gere um evento novo, confirme
 `Queued` e `Sent` no log do agente e procure exatamente por
-`Custom Windows_AD_Events`. Se um modelo não alertar, remova temporariamente os
+`Custom DomainController`. Se um modelo não alertar, remova temporariamente os
 filtros, use `> 0 em 1 minuto`, desative Auto Suppress e recoloque um filtro de
 cada vez.

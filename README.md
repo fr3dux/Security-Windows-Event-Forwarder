@@ -65,6 +65,11 @@ the individual events available for multi-component Darktrace models.
 For exact Custom Telemetry templates and model filters, see
 [Darktrace configuration](docs/DARKTRACE-CONFIGURATION.md).
 
+The wire tag is `Windows_AD_Events`, while the Darktrace Custom Telemetry
+template remains named `DomainController`. Models must use the generated
+**Custom DomainController** component; these identifiers are intentionally
+different to preserve backward compatibility.
+
 ## Requirements
 
 - Windows Server 2016 or later

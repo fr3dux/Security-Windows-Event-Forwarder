@@ -10,14 +10,20 @@ and configure:
 
 | Field | Value |
 |---|---|
-| Name | `Windows_AD_Events` |
+| Name | `DomainController` |
 | Type | `Custom Data` |
 | Log Filter | `Windows_AD_Events` |
 | Pattern Match | `Windows_AD_Events src="%{IP:src}" message=%{GREEDYDATA:message}` |
 
+The template name and the syslog tag are independent. Keep the template name
+`DomainController` to preserve the metric referenced by existing models; the
+broader tag emitted by the agent is `Windows_AD_Events`. Darktrace may also
+restrict underscores in template names even though they are valid in Log
+Filter values.
+
 Save before using **Test**. A successful result displays the IPv4 address in
 `src`, the full JSON object in `message`, and
-`type=Custom::Windows_AD_Events`. Testing validates only the parser: save the
+`type=Custom::DomainController`. Testing validates only the parser: save the
 template and generate a new live event before looking for the component in the
 Model Editor.
 
@@ -34,7 +40,8 @@ Model Editor.
 default `[2, 10]` covers interactive and RDP logons without the high volume of
 type 3 network logons.
 
-Use **Custom Windows_AD_Events**, not Security Integration, in every model.
+Use **Custom DomainController**, not Security Integration or a separately
+created `Custom WindowsADEvents` metric, in every model.
 While testing, use a threshold greater than zero, minimum alert interval `1`,
 Auto Suppress off, Generate Model Alert on, and Message as a display field.
 
@@ -60,7 +67,7 @@ Enterprise Admins.
 
 ## Behavioral model: logon, account creation, and privilege escalation
 
-Create three `Custom Windows_AD_Events` components in a 30-minute window:
+Create three `Custom DomainController` components in a 30-minute window:
 
 1. Successful interactive/RDP logon: EventID `4624` and LogonType `2` or `10`.
 2. Account creation: EventID `4720`.
@@ -106,6 +113,6 @@ not require every step to map to the same Darktrace device.
 
 If the component is missing, save the template, generate a new event, confirm
 `Queued` and `Sent` in the agent log, and search for exactly
-`Custom Windows_AD_Events`. If a model does not alert, temporarily remove its
+`Custom DomainController`. If a model does not alert, temporarily remove its
 Message filters, use `> 0 in 1 minute`, disable Auto Suppress, and restore one
 filter at a time.

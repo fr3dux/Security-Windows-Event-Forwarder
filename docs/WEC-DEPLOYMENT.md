@@ -134,7 +134,7 @@ Reinicie o serviço depois de alterar a configuração.
 ## 6. Custom Telemetry no Darktrace
 
 ```text
-Name: Windows_AD_Events
+Name: DomainController
 Type: Custom Data
 Log Filter: Windows_AD_Events
 Pattern Match: Windows_AD_Events src="%{IP:src}" message=%{GREEDYDATA:message}

@@ -127,7 +127,7 @@ Restart the service after changing the configuration.
 Use this Custom Telemetry template:
 
 ```text
-Name: Windows_AD_Events
+Name: DomainController
 Type: Custom Data
 Log Filter: Windows_AD_Events
 Pattern Match: Windows_AD_Events src="%{IP:src}" message=%{GREEDYDATA:message}
