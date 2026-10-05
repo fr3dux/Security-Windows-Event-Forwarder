@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Darktrace.WindowsEventForwarder", "src\Darktrace.WindowsEventForwarder\Darktrace.WindowsEventForwarder.csproj", "{2D34DB15-18D6-453E-A15A-3393D30AB8D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Darktrace.WindowsEventForwarder.Tests", "tests\Darktrace.WindowsEventForwarder.Tests\Darktrace.WindowsEventForwarder.Tests.csproj", "{78499F52-6C03-4178-8AF7-F6F370388BB2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2D34DB15-18D6-453E-A15A-3393D30AB8D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D34DB15-18D6-453E-A15A-3393D30AB8D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D34DB15-18D6-453E-A15A-3393D30AB8D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D34DB15-18D6-453E-A15A-3393D30AB8D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78499F52-6C03-4178-8AF7-F6F370388BB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78499F52-6C03-4178-8AF7-F6F370388BB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78499F52-6C03-4178-8AF7-F6F370388BB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78499F52-6C03-4178-8AF7-F6F370388BB2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

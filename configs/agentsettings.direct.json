@@ -1,0 +1,22 @@
+{
+  "Agent": {
+    "SourceAddress": "192.0.2.10",
+    "SourceAddressMode": "Configured",
+    "Channel": "Security",
+    "Tag": "WIN_AD_GROUP_CHANGE",
+    "ReadExistingEventsOnFirstStart": false,
+    "EventIds": [ 4728, 4732, 4756, 4729, 4733, 4757 ],
+    "SourceAddressOverrides": {}
+  },
+  "Syslog": {
+    "Host": "198.51.100.10",
+    "Port": 1514,
+    "Protocol": "Tcp",
+    "ConnectTimeoutSeconds": 10
+  },
+  "Storage": {
+    "MaximumQueueSizeMB": 100,
+    "RetryInitialSeconds": 2,
+    "RetryMaximumSeconds": 300
+  }
+}

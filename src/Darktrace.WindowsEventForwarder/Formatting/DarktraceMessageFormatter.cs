@@ -1,0 +1,35 @@
+using System.Text.Json;
+using System.Globalization;
+using Darktrace.WindowsEventForwarder.Configuration;
+using Darktrace.WindowsEventForwarder.Models;
+using Microsoft.Extensions.Options;
+
+namespace Darktrace.WindowsEventForwarder.Formatting;
+
+public sealed class DarktraceMessageFormatter(
+    IOptions<AgentOptions> options,
+    ISourceAddressResolver sourceAddressResolver)
+{
+    private readonly AgentOptions _options = options.Value;
+
+    public async Task<string> FormatAsync(SecurityEvent securityEvent, CancellationToken cancellationToken)
+    {
+        var body = new Dictionary<string, object?>
+        {
+            ["EventTime"] = securityEvent.EventTime,
+            ["Hostname"] = securityEvent.Hostname,
+            ["EventID"] = securityEvent.EventId,
+            ["RecordId"] = securityEvent.RecordId,
+            ["Provider"] = securityEvent.Provider
+        };
+
+        foreach (var pair in securityEvent.Data)
+            body[pair.Key] = pair.Value;
+
+        var json = JsonSerializer.Serialize(body);
+        var sourceAddress = await sourceAddressResolver.ResolveAsync(securityEvent, cancellationToken);
+        var message = $"{_options.Tag} src=\"{sourceAddress}\" message={json}";
+        var timestamp = securityEvent.EventTime.LocalDateTime.ToString("MMM dd HH:mm:ss", CultureInfo.InvariantCulture);
+        return $"<134>{timestamp} {securityEvent.Hostname} {message}";
+    }
+}

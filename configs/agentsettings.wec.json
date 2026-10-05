@@ -1,0 +1,24 @@
+{
+  "Agent": {
+    "SourceAddress": "192.0.2.20",
+    "SourceAddressMode": "ResolveEventComputer",
+    "Channel": "ForwardedEvents",
+    "Tag": "WIN_PRIV_GROUP_CHANGE",
+    "ReadExistingEventsOnFirstStart": false,
+    "EventIds": [ 4728, 4732, 4756, 4729, 4733, 4757 ],
+    "SourceAddressOverrides": {
+      "SERVER-WITH-MULTIPLE-IPS.example.local": "192.0.2.30"
+    }
+  },
+  "Syslog": {
+    "Host": "198.51.100.10",
+    "Port": 1514,
+    "Protocol": "Tcp",
+    "ConnectTimeoutSeconds": 10
+  },
+  "Storage": {
+    "MaximumQueueSizeMB": 500,
+    "RetryInitialSeconds": 2,
+    "RetryMaximumSeconds": 300
+  }
+}
