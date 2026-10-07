@@ -69,7 +69,7 @@ For exact Custom Telemetry templates and model filters, see
 The wire tag is `Windows_AD_Events`, while the Darktrace Custom Telemetry
 template remains named `DomainController`. Models must use the generated
 **Custom DomainController** component; these identifiers are intentionally
-different to preserve backward compatibility.
+different and must be configured exactly as documented.
 
 ## Requirements
 
@@ -173,15 +173,9 @@ accidental data loss.
 
 Please report vulnerabilities according to [SECURITY.md](SECURITY.md).
 
-## Version status
+## Current version
 
-- `v0.1.0`: direct Security-log collector, validated in a Windows Server 2016 lab.
-- `v0.2.0`: adds WEC/`ForwardedEvents` support and source-host address resolution;
-  treat WEC mode as pre-release until it has been validated in your environment.
-- `v0.3.0`: adds account creation, filtered successful logons, and SID-based
-  account-creation → privilege-escalation → logon correlation.
-- `v0.4.0`: renames the project, Windows service, executable, namespaces, paths,
-  scripts, and release package to `Security-Windows-Event-Forwarder`.
+`v0.4.0` is the current and only supported release.
 
 Local build artifacts are intentionally excluded from Git. Published binaries
 should be attached to versioned GitHub Releases after validation.
