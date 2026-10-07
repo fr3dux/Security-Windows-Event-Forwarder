@@ -3,7 +3,7 @@
 Esta arquitetura coleta alterações de grupos privilegiados de Domain Controllers e servidores membros sem instalar o agente personalizado em cada origem.
 
 ```text
-Windows Servers/DCs -> WEF -> Windows Event Collector -> agente v0.2 -> Darktrace
+Windows Servers/DCs -> WEF -> Windows Event Collector -> agente v0.4 -> Darktrace /NETWORK
 ```
 
 ## 1. Criar o grupo de origens
@@ -11,7 +11,7 @@ Windows Servers/DCs -> WEF -> Windows Event Collector -> agente v0.2 -> Darktrac
 Crie no Active Directory um grupo de segurança, por exemplo:
 
 ```text
-Darktrace-WEF-Sources
+Security-WEF-Sources
 ```
 
 Adicione as **contas de computador** dos servidores e Domain Controllers que participarão. Não adicione contas de usuários.
@@ -19,12 +19,12 @@ Adicione as **contas de computador** dos servidores e Domain Controllers que par
 Obtenha o SID do grupo:
 
 ```powershell
-Get-ADGroup "Darktrace-WEF-Sources" | Select-Object Name, SID
+Get-ADGroup "Security-WEF-Sources" | Select-Object Name, SID
 ```
 
 ## 2. Preparar o Windows Event Collector
 
-No servidor escolhido como WEC, copie o pacote `v0.2.0`, abra PowerShell como administrador e execute:
+No servidor escolhido como WEC, copie o pacote `v0.4.0`, abra PowerShell como administrador e execute:
 
 ```powershell
 .\setup-wec.ps1 -AllowedSourceGroupSid "S-1-5-21-..."
@@ -34,7 +34,7 @@ O script:
 
 - habilita o serviço Windows Event Collector;
 - aumenta o `ForwardedEvents` para 1 GB;
-- cria a subscription `Darktrace-Privileged-Group-Changes`;
+- cria a subscription `Security-Windows-Events`;
 - limita o acesso ao grupo de computadores informado;
 - mostra o endereço que deve ser configurado na GPO dos servidores de origem.
 
@@ -106,8 +106,8 @@ Use o IP do WEC como fallback. Em condições normais, o agente resolve o hostna
 
 ```powershell
 .\install.ps1 `
-  -DarktraceHost 198.51.100.10 `
-  -DarktracePort 1514 `
+  -DestinationHost 198.51.100.10 `
+  -DestinationPort 1514 `
   -Protocol Tcp `
   -SourceAddress 192.0.2.20 `
   -SourceAddressMode ResolveEventComputer `
@@ -118,7 +118,7 @@ Use o IP do WEC como fallback. Em condições normais, o agente resolve o hostna
 Para servidores com vários IPs ou resolução DNS ambígua, configure `SourceAddressOverrides` em:
 
 ```text
-C:\ProgramData\DarktraceEventForwarder\agentsettings.json
+C:\ProgramData\Security-Windows-Event-Forwarder\agentsettings.json
 ```
 
 Exemplo:
@@ -150,9 +150,9 @@ Os filtros completos para os modelos de VPN e grupos administrativos estão em
 No WEC:
 
 ```powershell
-wecutil gr "Darktrace-Privileged-Group-Changes"
+wecutil gr "Security-Windows-Events"
 Get-WinEvent -LogName ForwardedEvents -MaxEvents 10
-Get-Content "C:\ProgramData\DarktraceEventForwarder\logs\agent.log" -Tail 100
+Get-Content "C:\ProgramData\Security-Windows-Event-Forwarder\logs\agent.log" -Tail 100
 ```
 
 Na origem, verifique:

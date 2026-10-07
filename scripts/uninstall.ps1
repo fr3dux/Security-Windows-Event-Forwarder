@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
-$serviceName = "DarktraceEventForwarder"
-$installDirectory = Join-Path $env:ProgramFiles "DarktraceEventForwarder"
+$serviceName = "Security-Windows-Event-Forwarder"
+$installDirectory = Join-Path $env:ProgramFiles "Security-Windows-Event-Forwarder"
 
 $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
 if ($service) {
@@ -14,4 +14,4 @@ if (Test-Path $installDirectory) {
     Remove-Item $installDirectory -Recurse -Force
 }
 
-Write-Host "Service removed. Queue, configuration, bookmark, and logs were preserved under $env:ProgramData\DarktraceEventForwarder."
+Write-Host "Service removed. Queue, configuration, bookmark, and logs were preserved under $env:ProgramData\Security-Windows-Event-Forwarder."

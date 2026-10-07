@@ -1,6 +1,6 @@
 param(
-    [Parameter(Mandatory = $true)][string]$DarktraceHost,
-    [int]$DarktracePort = 1514,
+    [Parameter(Mandatory = $true)][string]$DestinationHost,
+    [int]$DestinationPort = 1514,
     [ValidateSet("Tcp", "Udp")][string]$Protocol = "Tcp",
     [Parameter(Mandatory = $true)][string]$SourceAddress,
     [ValidateSet("Configured", "ResolveEventComputer")][string]$SourceAddressMode = "Configured",
@@ -9,9 +9,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$serviceName = "DarktraceEventForwarder"
-$installDirectory = Join-Path $env:ProgramFiles "DarktraceEventForwarder"
-$dataDirectory = Join-Path $env:ProgramData "DarktraceEventForwarder"
+$serviceName = "Security-Windows-Event-Forwarder"
+$installDirectory = Join-Path $env:ProgramFiles "Security-Windows-Event-Forwarder"
+$dataDirectory = Join-Path $env:ProgramData "Security-Windows-Event-Forwarder"
 
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal($identity)
@@ -28,7 +28,7 @@ New-Item -ItemType Directory -Force -Path $dataDirectory | Out-Null
 icacls.exe $dataDirectory /inheritance:r /grant:r `
     "*S-1-5-18:(OI)(CI)F" `
     "*S-1-5-32-544:(OI)(CI)F" | Out-Null
-Copy-Item (Join-Path $PSScriptRoot "DarktraceEventForwarder.exe") $installDirectory
+Copy-Item (Join-Path $PSScriptRoot "Security-Windows-Event-Forwarder.exe") $installDirectory
 Copy-Item (Join-Path $PSScriptRoot "agentsettings.json") $installDirectory
 
 $settings = @{
@@ -49,8 +49,8 @@ $settings = @{
         PrivilegedDomainGroupRids = @(512, 518, 519)
     }
     Syslog = @{
-        Host = $DarktraceHost
-        Port = $DarktracePort
+        Host = $DestinationHost
+        Port = $DestinationPort
         Protocol = $Protocol
         ConnectTimeoutSeconds = 10
     }
@@ -62,11 +62,11 @@ $settings = @{
 }
 $settings | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $dataDirectory "agentsettings.json") -Encoding UTF8
 
-$binary = Join-Path $installDirectory "DarktraceEventForwarder.exe"
-sc.exe create $serviceName binPath= "`"$binary`"" start= auto obj= LocalSystem DisplayName= "Darktrace Event Forwarder" | Out-Null
-sc.exe description $serviceName "Forwards selected Windows Security events to Darktrace Custom Telemetry." | Out-Null
+$binary = Join-Path $installDirectory "Security-Windows-Event-Forwarder.exe"
+sc.exe create $serviceName binPath= "`"$binary`"" start= auto obj= LocalSystem DisplayName= "Security Windows Event Forwarder" | Out-Null
+sc.exe description $serviceName "Forwards selected Windows Security events using the configured telemetry format." | Out-Null
 sc.exe failure $serviceName reset= 86400 actions= restart/5000/restart/15000/restart/60000 | Out-Null
 Start-Service $serviceName
 
-Write-Host "Darktrace Event Forwarder installed and started."
+Write-Host "Security Windows Event Forwarder installed and started."
 Write-Host "Log: $dataDirectory\logs\agent.log"

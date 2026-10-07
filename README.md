@@ -1,13 +1,14 @@
-# Darktrace Windows Event Forwarder
+# Security-Windows-Event-Forwarder
 
-Purpose-built Windows service that forwards selected Windows Security events to
-**Darktrace Custom Telemetry**. It reads structured fields from Windows Event
-XML, serializes them as JSON, and sends one RFC 3164 syslog line per event.
+Purpose-built Windows service **for Darktrace /NETWORK only**. It forwards
+selected Windows Security events to Custom Telemetry, reads structured fields
+from Windows Event XML, serializes them as JSON, and sends one RFC 3164 syslog
+line per event.
 
 > [!IMPORTANT]
-> This software is designed exclusively for Darktrace Custom Telemetry. Its
-> message contract, tags, and deployment guidance are intentionally tailored to
-> Darktrace and it is not intended to be a generic syslog or SIEM agent.
+> This software is for Darktrace /NETWORK only. Its message contract, tags, and
+> deployment guidance are intentionally tailored to that integration; it is not
+> intended to be a generic syslog or SIEM agent.
 
 This is an independent community project. It is not affiliated with, endorsed
 by, or supported by Darktrace. Darktrace is a trademark of its respective owner.
@@ -45,7 +46,7 @@ not depend on the display language used by Event Viewer.
 See [Windows Event Collector deployment](docs/WEC-DEPLOYMENT.en.md) for the full
 WEC procedure.
 
-## Darktrace message contract
+## Custom Telemetry message contract
 
 Each event is sent as a single RFC 3164 line:
 
@@ -91,7 +92,7 @@ From a PowerShell session with .NET 8 SDK:
 The self-contained Windows x64 package is produced at:
 
 ```text
-artifacts\releases\v0.3.0\win-x64
+artifacts\releases\v0.4.0\win-x64
 ```
 
 ## Install: direct mode
@@ -101,8 +102,8 @@ as Administrator:
 
 ```powershell
 .\install.ps1 `
-  -DarktraceHost 198.51.100.10 `
-  -DarktracePort 1514 `
+  -DestinationHost 198.51.100.10 `
+  -DestinationPort 1514 `
   -Protocol Tcp `
   -SourceAddress 192.0.2.10
 ```
@@ -111,20 +112,20 @@ The service is installed as `LocalSystem`, starts automatically, and stores its
 effective configuration at:
 
 ```text
-C:\ProgramData\DarktraceEventForwarder\agentsettings.json
+C:\ProgramData\Security-Windows-Event-Forwarder\agentsettings.json
 ```
 
 After changing that file, restart the service:
 
 ```powershell
-Restart-Service DarktraceEventForwarder
+Restart-Service Security-Windows-Event-Forwarder
 ```
 
 ## Validate
 
 ```powershell
-Get-Service DarktraceEventForwarder
-Get-Content "C:\ProgramData\DarktraceEventForwarder\logs\agent.log" -Tail 100
+Get-Service Security-Windows-Event-Forwarder
+Get-Content "C:\ProgramData\Security-Windows-Event-Forwarder\logs\agent.log" -Tail 100
 ```
 
 Generate a new group-membership event and confirm that the log contains both
@@ -141,7 +142,7 @@ Generate a new group-membership event and confirm that the log contains both
 Operational data is stored under:
 
 ```text
-C:\ProgramData\DarktraceEventForwarder
+C:\ProgramData\Security-Windows-Event-Forwarder
 ```
 
 The installer restricts this directory to `SYSTEM` and local `Administrators`
@@ -179,6 +180,8 @@ Please report vulnerabilities according to [SECURITY.md](SECURITY.md).
   treat WEC mode as pre-release until it has been validated in your environment.
 - `v0.3.0`: adds account creation, filtered successful logons, and SID-based
   account-creation → privilege-escalation → logon correlation.
+- `v0.4.0`: renames the project, Windows service, executable, namespaces, paths,
+  scripts, and release package to `Security-Windows-Event-Forwarder`.
 
 Local build artifacts are intentionally excluded from Git. Published binaries
 should be attached to versioned GitHub Releases after validation.

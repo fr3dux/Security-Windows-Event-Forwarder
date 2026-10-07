@@ -4,7 +4,7 @@ This architecture collects privileged-group changes from Domain Controllers and
 member servers without installing the custom agent on every source.
 
 ```text
-Windows servers/DCs -> WEF -> Windows Event Collector -> agent -> Darktrace
+Windows servers/DCs -> WEF -> Windows Event Collector -> agent -> Darktrace /NETWORK
 ```
 
 ## 1. Create the source-computer group
@@ -12,19 +12,19 @@ Windows servers/DCs -> WEF -> Windows Event Collector -> agent -> Darktrace
 Create an Active Directory security group, for example:
 
 ```text
-Darktrace-WEF-Sources
+Security-WEF-Sources
 ```
 
 Add the **computer accounts** of participating servers and Domain Controllers.
 Do not add user accounts. Retrieve its SID:
 
 ```powershell
-Get-ADGroup "Darktrace-WEF-Sources" | Select-Object Name, SID
+Get-ADGroup "Security-WEF-Sources" | Select-Object Name, SID
 ```
 
 ## 2. Prepare the Windows Event Collector
 
-Copy the v0.2.0 package to the WEC server, open PowerShell as Administrator, and
+Copy the v0.4.0 package to the WEC server, open PowerShell as Administrator, and
 run:
 
 ```powershell
@@ -33,7 +33,7 @@ run:
 
 The script enables Windows Event Collector, increases the `ForwardedEvents` log
 to 1 GB, creates the source-initiated subscription
-`Darktrace-Privileged-Group-Changes`, limits access to the supplied computer
+`Security-Windows-Events`, limits access to the supplied computer
 group, and prints the URI required by the source-computer GPO. It will not
 overwrite a subscription with the same name.
 
@@ -102,8 +102,8 @@ original event hostname and puts that computer's address in `src`:
 
 ```powershell
 .\install.ps1 `
-  -DarktraceHost 198.51.100.10 `
-  -DarktracePort 1514 `
+  -DestinationHost 198.51.100.10 `
+  -DestinationPort 1514 `
   -Protocol Tcp `
   -SourceAddress 192.0.2.20 `
   -SourceAddressMode ResolveEventComputer `
@@ -112,7 +112,7 @@ original event hostname and puts that computer's address in `src`:
 ```
 
 For multihomed hosts or ambiguous DNS, add explicit overrides to
-`C:\ProgramData\DarktraceEventForwarder\agentsettings.json`:
+`C:\ProgramData\Security-Windows-Event-Forwarder\agentsettings.json`:
 
 ```json
 "SourceAddressOverrides": {
@@ -142,9 +142,9 @@ created. Model filters are documented in
 On the collector:
 
 ```powershell
-wecutil gr "Darktrace-Privileged-Group-Changes"
+wecutil gr "Security-Windows-Events"
 Get-WinEvent -LogName ForwardedEvents -MaxEvents 10
-Get-Content "C:\ProgramData\DarktraceEventForwarder\logs\agent.log" -Tail 100
+Get-Content "C:\ProgramData\Security-Windows-Event-Forwarder\logs\agent.log" -Tail 100
 ```
 
 On a source computer, inspect:

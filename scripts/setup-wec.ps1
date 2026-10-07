@@ -3,7 +3,7 @@ param(
     [ValidatePattern('^S-1-5-21-[0-9-]+$')]
     [string]$AllowedSourceGroupSid,
 
-    [string]$SubscriptionId = "Darktrace-Privileged-Group-Changes"
+    [string]$SubscriptionId = "Security-Windows-Events"
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,7 +22,7 @@ winrm.cmd quickconfig -quiet
 wecutil.exe qc /q
 wevtutil.exe sl ForwardedEvents /ms:1073741824
 
-$dataDirectory = Join-Path $env:ProgramData "DarktraceEventForwarder"
+$dataDirectory = Join-Path $env:ProgramData "Security-Windows-Event-Forwarder"
 New-Item -ItemType Directory -Force -Path $dataDirectory | Out-Null
 $subscriptionPath = Join-Path $dataDirectory "$SubscriptionId.xml"
 $allowedSources = "O:NSG:NSD:(A;;GA;;;$AllowedSourceGroupSid)(A;;GA;;;NS)"
@@ -31,7 +31,7 @@ $xml = @"
 <Subscription xmlns="http://schemas.microsoft.com/2006/03/windows/events/subscription">
   <SubscriptionId>$SubscriptionId</SubscriptionId>
   <SubscriptionType>SourceInitiated</SubscriptionType>
-  <Description>Collects account lifecycle, privileged membership, and interactive logon events for Darktrace.</Description>
+  <Description>Collects account lifecycle, privileged membership, and interactive logon events.</Description>
   <Enabled>true</Enabled>
   <Uri>http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog</Uri>
   <ConfigurationMode>Custom</ConfigurationMode>

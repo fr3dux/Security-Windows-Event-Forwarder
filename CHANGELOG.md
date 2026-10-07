@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here.
 
+## 0.4.0 - 2026-10-07
+
+- Renamed the project and repository to `Security-Windows-Event-Forwarder`.
+- Renamed the Windows service, executable, namespaces, data paths, scripts, and
+  release package so the third-party product name is not used as software branding.
+- Documented the supported scope as **for Darktrace /NETWORK only**.
+
 ## 0.3.0 - 2026-10-05
 
 - Replaced event-specific tags with the unified `Windows_AD_Events` telemetry.
